@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Вакансии</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+
+  <div class="header">
+    <a href="./"><img class="header_logo" src="./img/SnapBG.ai_1744380875777.png" alt="Логотип"></a>
+    <div class="header_links">
+      <a href="./news.html" class="header__item">Новости</a>
+      <a href="./vacancy.html" class="header__item">Вакансий</a>
+      <a href="./workers.html" class="header__item">Работники</a>
+      <a href="./kabinet.html" class="header__item">Кабинет</a>
+    </div>
+  </div>
+
+  <h1 class="header-title">Вакансии</h1>
+
+  <!-- Кнопка создания вакансии -->
+  <div style="margin: 20px;">
+    <button id="open-vacancy-modal" class="vac_btn">Создать вакансию</button>
+  </div>
+
+  <!-- Модальное окно создания -->
+  <div id="create-vacancy-modal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div style="background:#fff; padding:20px; border-radius:10px; max-width:400px; width:90%; position:relative;">
+      <h3>Добавить вакансию</h3>
+      <input id="new-vac-title" type="text" placeholder="Название" style="width:100%;margin:8px 0;padding:8px;">
+      <input id="new-vac-salary" type="text" placeholder="Зарплата" style="width:100%;margin:8px 0;padding:8px;">
+      <textarea id="new-vac-desc" placeholder="Описание" style="width:100%;margin:8px 0;padding:8px;" rows="5"></textarea>
+      <button id="save-vacancy" class="vac_btn" style="margin-top:10px;">Сохранить</button>
+      <button id="close-vacancy-modal" class="vac_btn" style="margin-left:10px; background:red; color:white;">Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Список вакансий -->
+  <div class="vac__inner" id="vacancy-list"></div>
+
+  <!-- Модальное окно отклика -->
+  <div id="modal-response" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+    <div style="background:#fff; padding:20px; border-radius:8px; max-width:400px; width:90%; position:relative;">
+      <div id="close-modal-btn" style="position:absolute; top:10px; right:10px; font-size:20px; cursor:pointer;">&times;</div>
+      <h3>Отклик на вакансию</h3>
+      <p id="vacancy-title" style="font-weight:bold;"></p>
+      <input id="resp-name" type="text" placeholder="Имя" style="width:100%;margin:5px 0;padding:8px;">
+      <input id="resp-surname" type="text" placeholder="Фамилия" style="width:100%;margin:5px 0;padding:8px;">
+      <input id="resp-phone" type="text" placeholder="Телефон" style="width:100%;margin:5px 0;padding:8px;">
+      <button id="send-response" style="margin-top:10px;">Отправить</button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const modal = document.getElementById("modal-response");
+      const titleEl = document.getElementById("vacancy-title");
+      let selectedVacancy = "";
+
+      const vacancyList = document.getElementById("vacancy-list");
+
+      const defaultVacancies = [
+        {
+          title: "DevOps Engineer",
+          salary: "от 700 000 тг на руки",
+          description: "DevOps-инженер — специалист, который объединяет разработку и системное администрирование."
+        },
+        {
+          title: "Контент-менеджер",
+          salary: "от 200 000 тг на руки",
+          description: "Контент-менеджер — отвечает за карточки товаров и описание контента."
+        },
+        {
+          title: "QA Engineer",
+          salary: "от 700 000 тг на руки",
+          description: "QA-тестировщик — тестирует сайты и приложения на ошибки и стабильность."
+        }
+      ];
+
+      // Инициализация или восстановление вакансий
+      let vacancies = JSON.parse(localStorage.getItem("vacancies") || "[]");
+      if (!Array.isArray(vacancies) || vacancies.length === 0) {
+        localStorage.setItem("vacancies", JSON.stringify(defaultVacancies));
+        vacancies = [...defaultVacancies];
+      }
+
+      function renderVacancies() {
+        vacancyList.innerHTML = "";
+
+        vacancies.forEach((vac, index) => {
+          const item = document.createElement("div");
+          item.className = "vac__item";
+          item.innerHTML = `
+            <h3 class="vac__item_name">${vac.title}</h3>
+            <h4 class="vac__item_zp">${vac.salary}</h4>
+            <p class="vac__item_about">${vac.description}</p>
+            <div class="vac_items_btns">
+              <button class="vac__item_btn_get vac_btn">Откликнуться</button>
+              <button class="vac__item_btn_delete vac_btn" style="background:red; color:white;">Удалить</button>
+            </div>
+          `;
+
+          // Отклик
+          item.querySelector(".vac__item_btn_get").addEventListener("click", () => {
+            selectedVacancy = vac.title;
+            titleEl.textContent = selectedVacancy;
+            modal.style.display = "flex";
+          });
+
+          // Удаление
+          item.querySelector(".vac__item_btn_delete").addEventListener("click", () => {
+            vacancies.splice(index, 1);
+            localStorage.setItem("vacancies", JSON.stringify(vacancies));
+            renderVacancies();
+          });
+
+          vacancyList.appendChild(item);
+        });
+      }
+
+      renderVacancies();
+
+      // Отклик
+      document.getElementById("send-response").addEventListener("click", () => {
+        const name = document.getElementById("resp-name").value.trim();
+        const surname = document.getElementById("resp-surname").value.trim();
+        const phone = document.getElementById("resp-phone").value.trim();
+
+        if (!name || !surname || !phone) {
+          alert("Пожалуйста, заполните все поля.");
+          return;
+        }
+
+        const responses = JSON.parse(localStorage.getItem("responses") || "[]");
+        responses.push({ name, surname, phone, vacancy: selectedVacancy });
+        localStorage.setItem("responses", JSON.stringify(responses));
+        modal.style.display = "none";
+        alert("Отклик отправлен!");
+      });
+
+      document.getElementById("close-modal-btn").addEventListener("click", () => {
+        modal.style.display = "none";
+      });
+
+      // Модалка создания
+      const createBtn = document.getElementById("open-vacancy-modal");
+      const modalCreate = document.getElementById("create-vacancy-modal");
+      const saveBtn = document.getElementById("save-vacancy");
+      const closeBtn = document.getElementById("close-vacancy-modal");
+
+      createBtn.addEventListener("click", () => {
+        modalCreate.style.display = "flex";
+      });
+
+      closeBtn.addEventListener("click", () => {
+        modalCreate.style.display = "none";
+      });
+
+      saveBtn.addEventListener("click", () => {
+        const title = document.getElementById("new-vac-title").value.trim();
+        const salary = document.getElementById("new-vac-salary").value.trim();
+        const description = document.getElementById("new-vac-desc").value.trim();
+
+        if (!title || !salary || !description) {
+          alert("Заполните все поля!");
+          return;
+        }
+
+        vacancies.push({ title, salary, description });
+        localStorage.setItem("vacancies", JSON.stringify(vacancies));
+
+        modalCreate.style.display = "none";
+        renderVacancies();
+      });
+    });
+  </script>
+
+</body>
+</html>

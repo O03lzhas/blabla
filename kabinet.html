@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Кабинет</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+  <style>
+    .calendar .date {
+      width: 60px;
+      height: 60px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      border-radius: 6px;
+      margin: 4px;
+      position: relative;
+      cursor: pointer; /* Добавлено для индикации кликабельности */
+    }
+    .calendar .date.today {
+      border: 2px solid #007bff;
+      background-color: #e6f0ff;
+      font-weight: bold;
+    }
+    .calendar .date.inactive {
+      background-color: #f8f8f8;
+      color: #aaa;
+    }
+    .calendar .date div {
+      font-size: 12px;
+      margin-top: 6px;
+      color: #007a00;
+      text-align: center;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      justify-content: center;
+    }
+
+    /* Стили для модального окна заметок */
+    .custom-modal {
+      display: none; /* Hidden by default */
+      position: fixed; /* Stay in place */
+      z-index: 1000; /* Sit on top */
+      left: 0;
+      top: 0;
+      width: 100%; /* Full width */
+      height: 100%; /* Full height */
+      overflow: auto; /* Enable scroll if needed */
+      background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-window {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%; /* Could be more specific */
+      max-width: 500px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+
+    .modal-title {
+      margin-top: 0;
+      color: #333;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-input, .modal-textarea {
+      width: calc(100% - 20px);
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    .modal-textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .modal_btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s ease;
+    }
+
+    .modal_btn:not(.cancel) {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .modal_btn.cancel {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .modal_btn:hover:not(.cancel) {
+      background-color: #0056b3;
+    }
+
+    .modal_btn.cancel:hover {
+      background-color: #da190b;
+    }
+    .note-date-display {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <img class="header_logo" src="./img/SnapBG.ai_1744380875777.png" alt="">
+    <div class="header_links">
+      <a href="./news.html" class="header__item">Новости</a>
+      <a href="./vacancy.html" class="header__item">Вакансий</a>
+      <a href="./workers.html" class="header__item">Работники</a>
+      <a href="./kabinet.html" class="header__item">Кабинет</a>
+    </div>
+  </div>
+
+  <div class="kabinet">
+    <div class="kabinet__inner">
+      <div class="left_block">
+        <div class="kabinet_port">
+          <img class="kabinet_port_img" src="./img/a1b0e6dddcc9bf4c04e02ca453910a85.jpg" alt="">
+          <div class="kabinet_port_text">
+            <h2>Гость</h2>
+            <p>Сильная команда начинается с уважения, доверия и заботы о людях. HR — это не просто про найм, а про создание среды, в которой каждый сотрудник чувствует свою ценность, может расти и приносить максимум пользы компании.</p>
+            <button class="create-post-btn">Создать пост</button>
+          </div>
+        </div>
+
+        <div class="calendar">
+          <div class="header_calendar">
+            <button id="prevBtn"><img src="./img/prev.png" alt=""></button>
+            <div class="monthYear" id="monthYear">April 2025</div>
+            <button id="nextBtn"><img src="./img/next.png" alt=""></button>
+          </div>
+          <div class="days">
+            <div class="day">Mon</div><div class="day">Tue</div><div class="day">Wed</div>
+            <div class="day">Thu</div><div class="day">Fri</div><div class="day">Sat</div><div class="day">Sun</div>
+          </div>
+          <div class="dates" id="dates"></div>
+        </div>
+      </div>
+
+      <div class="employee-table">
+        <h2>Список откликов</h2>
+        <table class="responses-table">
+          <thead>
+            <tr>
+              <th></th>
+              <th>ФИО</th>
+              <th>Телефон</th>
+              <th>Вакансия</th>
+            </tr>
+          </thead>
+          <tbody id="response-list"></tbody>
+        </table>
+        <div style="margin-top: 10px; display: flex; gap: 10px;">
+          <button id="select-all-btn" class="vac_btn" style="background: gray; color: white;">Выбрать все</button>
+          <button id="delete-selected-btn" class="vac_btn" style="background:red; color:white;">Удалить выбранные</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const username = localStorage.getItem('currentUser') || 'Гость';
+      const userNameElem = document.querySelector('.kabinet_port_text h2');
+      if (userNameElem) {
+        userNameElem.textContent = username;
+      }
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const tbody = document.getElementById("response-list");
+      const deleteBtn = document.getElementById("delete-selected-btn");
+      const selectAllBtn = document.getElementById("select-all-btn");
+      let responses = JSON.parse(localStorage.getItem("responses") || "[]");
+      let allSelected = false;
+
+      function renderResponses() {
+        tbody.innerHTML = "";
+        responses.forEach((resp, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><input type="checkbox" class="response-checkbox" data-index="${index}"></td>
+            <td>${resp.name}</td>
+            <td>${resp.phone}</td>
+            <td>${resp.vacancy}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+
+      deleteBtn.addEventListener("click", () => {
+        const checked = document.querySelectorAll(".response-checkbox:checked");
+        if (checked.length === 0) {
+          alert("Выберите отклики для удаления.");
+          return;
+        }
+
+        const indexes = Array.from(checked).map(cb => parseInt(cb.dataset.index));
+        responses = responses.filter((_, i) => !indexes.includes(i));
+        localStorage.setItem("responses", JSON.stringify(responses));
+        allSelected = false;
+        renderResponses();
+      });
+
+      selectAllBtn.addEventListener("click", () => {
+        const checkboxes = document.querySelectorAll(".response-checkbox");
+        allSelected = !allSelected;
+        checkboxes.forEach(cb => cb.checked = allSelected);
+        selectAllBtn.textContent = allSelected ? "Снять выделение" : "Выбрать все";
+      });
+
+      renderResponses();
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const monthYearEl = document.getElementById("monthYear");
+      const datesEl = document.getElementById("dates");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+
+      const holidays = {
+        '1-1': 'Новый год', '3-8': 'Женский день', '3-21': 'Наурыз', '3-22': 'Наурыз', '3-23': 'Наурыз',
+        '5-1': 'День единства', '5-9': 'День Победы', '7-6': 'День столицы',
+        '8-30': 'День Конституции', '12-1': 'День Первого Президента',
+        '12-16': 'День независимости', '12-17': 'День независимости'
+      };
+
+      let currentDate = new Date();
+
+      function renderCalendar() {
+        datesEl.innerHTML = "";
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const today = new Date();
+        const savedNotes = JSON.parse(localStorage.getItem("calendarNotes") || "{}"); // Загружаем заметки
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+        const offset = firstDay === 0 ? 6 : firstDay - 1;
+
+        monthYearEl.textContent = currentDate.toLocaleDateString("ru-RU", {
+          year: "numeric", month: "long"
+        });
+
+        for (let i = 0; i < offset; i++) {
+          const empty = document.createElement("div");
+          empty.className = "date inactive";
+          datesEl.appendChild(empty);
+        }
+
+        for (let d = 1; d <= lastDate; d++) {
+          const dateKey = `${month + 1}-${d}-${year}`; // Обновлен формат dateKey, чтобы включать год
+          const dateDiv = document.createElement("div");
+          dateDiv.className = "date";
+          dateDiv.textContent = d;
+
+          if (
+            d === today.getDate() &&
+            month === today.getMonth() &&
+            year === today.getFullYear()
+          ) {
+            dateDiv.classList.add("today");
+          }
+
+          if (holidays[`${month + 1}-${d}`]) { // Используем старый формат для праздников
+            dateDiv.style.background = "#d4fcd4";
+            const label = document.createElement("div");
+            label.textContent = holidays[`${month + 1}-${d}`];
+            dateDiv.appendChild(label);
+          }
+
+          // Добавляем индикатор заметки и обработчик клика
+          if (savedNotes[dateKey]) {
+            const noteIndicator = document.createElement("div");
+            noteIndicator.textContent = "Заметка";
+            noteIndicator.style.color = "#0056b3"; // Произвольный цвет для заметки
+            noteIndicator.style.fontSize = "10px";
+            noteIndicator.style.marginTop = "2px";
+            dateDiv.appendChild(noteIndicator);
+          }
+          dateDiv.addEventListener("click", () => openNoteModal(dateKey)); // Открываем модальное окно заметки
+
+          datesEl.appendChild(dateDiv);
+        }
+      }
+
+      prevBtn.addEventListener("click", () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+      });
+
+      nextBtn.addEventListener("click", () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+      });
+
+      renderCalendar();
+    });
+  </script>
+
+  <div class="dynamic-posts"></div>
+  <script src="./js/kabinet.js"></script>
+
+  <div id="postModal" class="custom-modal">
+    <div class="modal-window">
+      <h2 class="modal-title">Создание поста</h2>
+      <input type="file" id="postImage" accept="image/*" class="modal-input">
+      <textarea id="postText" placeholder="Введите текст поста..." rows="4" class="modal-textarea"></textarea>
+      <div class="modal-actions">
+        <button id="savePostBtn" class="modal_btn">Сохранить</button>
+        <button class="modal_btn cancel" onclick="document.getElementById('postModal').style.display='none'">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelector(".create-post-btn").onclick = function () {
+      document.getElementById("postModal").style.display = "flex";
+    };
+
+    document.getElementById("savePostBtn").onclick = function () {
+      const file = document.getElementById("postImage").files[0];
+      const text = document.getElementById("postText").value;
+
+      if (!file || !text) {
+        alert("Заполните все поля");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = function () {
+        const posts = JSON.parse(localStorage.getItem("posts") || "[]");
+        posts.push({ image: reader.result, text });
+        localStorage.setItem("posts", JSON.stringify(posts));
+        alert("Пост сохранен!");
+        document.getElementById("postModal").style.display = "none";
+        document.getElementById("postImage").value = "";
+        document.getElementById("postText").value = "";
+      };
+      reader.readAsDataURL(file);
+    };
+  </script>
+
+  <div id="noteModal" class="custom-modal">
+    <div class="modal-window">
+      <h2 id="noteDateDisplay" class="note-date-display">Заметка на [Дата]</h2>
+      <textarea id="noteContent" placeholder="Введите заметку..." rows="6" class="modal-textarea"></textarea>
+      <div class="modal-actions">
+        <button id="saveNoteBtn" class="modal_btn">Сохранить</button>
+        <button id="deleteNoteBtn" class="modal_btn cancel" style="background: #dc3545;">Удалить</button>
+        <button id="closeNoteModal" class="modal_btn cancel">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function openNoteModal(dateKey) {
+      const noteModal = document.getElementById("noteModal");
+      const noteContent = document.getElementById("noteContent");
+      const noteDateDisplay = document.getElementById("noteDateDisplay");
+      const savedNotes = JSON.parse(localStorage.getItem("calendarNotes") || "{}");
+
+      noteModal.style.display = "flex";
+      noteModal.dataset.dateKey = dateKey;
+      // Форматируем dateKey для отображения, например "1-6-2025" в "1 июня 2025"
+      const [month, day, year] = dateKey.split('-');
+      const formattedDate = new Date(year, month - 1, day).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+      noteDateDisplay.textContent = `Заметка на ${formattedDate}`;
+      noteContent.value = savedNotes[dateKey] || "";
+    }
+
+    document.getElementById("closeNoteModal").onclick = () => {
+      document.getElementById("noteModal").style.display = "none";
+    };
+
+    document.getElementById("saveNoteBtn").onclick = () => {
+      const dateKey = document.getElementById("noteModal").dataset.dateKey;
+      const content = document.getElementById("noteContent").value.trim();
+      const notes = JSON.parse(localStorage.getItem("calendarNotes") || "{}");
+      if (content) {
+        notes[dateKey] = content;
+        localStorage.setItem("calendarNotes", JSON.stringify(notes));
+      } else {
+        delete notes[dateKey]; // Если заметка пустая, удаляем её
+        localStorage.setItem("calendarNotes", JSON.stringify(notes));
+      }
+      document.getElementById("noteModal").style.display = "none";
+      renderCalendar(); // Обновим календарь, чтобы отобразить/скрыть индикатор заметки
+    };
+
+    document.getElementById("deleteNoteBtn").onclick = () => {
+      const dateKey = document.getElementById("noteModal").dataset.dateKey;
+      const notes = JSON.parse(localStorage.getItem("calendarNotes") || "{}");
+      delete notes[dateKey];
+      localStorage.setItem("calendarNotes", JSON.stringify(notes));
+      document.getElementById("noteModal").style.display = "none";
+      renderCalendar(); // Обновим календарь
+    };
+  </script>
+
+</body>
+</html>
